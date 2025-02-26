@@ -25,149 +25,81 @@ define([
 		if (context.type == context.UserEventType.EDIT) {
 			var phoneCallRecord = context.newRecord;
 
-			var starttime = convertTo24HourFormat(
-				phoneCallRecord.getValue({
+			var phonecallSubject = phoneCallRecord.getValue({
+				fieldId: "title",
+			});
+
+			if (phonecallSubject.indexOf("Call with") === 0) {
+				var starttime = convertTo24HourFormat(
+					phoneCallRecord.getValue({
+						fieldId: "starttime",
+					})
+				);
+
+				var endtime = convertTo24HourFormat(
+					phoneCallRecord.getValue({
+						fieldId: "endtime",
+					})
+				);
+
+				var now = new Date();
+
+				// Format the date to "YYYY-MM-DDTHH:MM:SS"
+				now.setHours(now.getHours() + 19);
+				var year = now.getFullYear();
+				var month = customPadStart((now.getMonth() + 1).toString(), 2, "0"); // Months are zero-based
+				var day = customPadStart(now.getDate().toString(), 2, "0");
+				var hours = customPadStart(now.getHours().toString(), 2, "0");
+				var minutes = customPadStart(now.getMinutes().toString(), 2, "0");
+				var seconds = customPadStart(now.getSeconds().toString(), 2, "0");
+
+				var formattedTime = hours + ":" + minutes;
+
+				var callback_date = month + "/" + day + "/" + year;
+				var date = new Date(callback_date);
+				format.format({
+					value: date,
+					type: format.Type.DATE,
+					timezone: format.Timezone.AUSTRALIA_SYDNEY,
+				});
+
+				var start_arr = formattedTime.split(":");
+				var startTimeVar = new Date(callback_date);
+				startTimeVar.setHours(start_arr[0], start_arr[1], 0, 0);
+
+				var oldStartTime = starttime.split(":");
+				var oldStartTimeVar = new Date(callback_date);
+				oldStartTimeVar.setHours(oldStartTime[0], oldStartTime[1], 0, 0);
+
+				var oldEndTime = endtime.split(":");
+				var oldEndTimeVar = new Date(callback_date);
+				oldEndTimeVar.setHours(oldEndTime[0], oldEndTime[1], 0, 0);
+
+				var diffInMinutes = (oldEndTimeVar - oldStartTimeVar) / (1000 * 60);
+
+				var endTimeVar = new Date(callback_date);
+				endTimeVar.setHours(start_arr[0], start_arr[1], 0, 0);
+				endTimeVar.setMinutes(endTimeVar.getMinutes() + diffInMinutes);
+
+				phoneCallRecord.setValue({
+					fieldId: "startdate",
+					value: date,
+				});
+				phoneCallRecord.setValue({
+					fieldId: "completeddate",
+					value: date,
+				});
+
+				phoneCallRecord.setValue({
 					fieldId: "starttime",
-				})
-			);
+					value: startTimeVar,
+				});
 
-			var endtime = convertTo24HourFormat(
-				phoneCallRecord.getValue({
+				phoneCallRecord.setValue({
 					fieldId: "endtime",
-				})
-			);
-
-			log.debug({
-				title: "starttime",
-				details: starttime,
-			});
-
-			log.debug({
-				title: "endtime",
-				details: endtime,
-			});
-
-			// Calculate the difference in minutes between starttime and endtime
-			// var startDate = new Date("1970-01-01T" + starttime + ":00");
-			// var endDate = new Date("1970-01-01T" + endtime + ":00");
-			var diffInMinutes = (endtime - starttime) / (1000 * 60);
-
-			log.debug({
-				title: "Difference in minutes",
-				details: diffInMinutes,
-			});
-
-			// var todaysDateTime = getDateStoreNS();
-			// var todaysDateTime = getCurrentDateTime();
-
-			// var todaysDateTimeSplit = todaysDateTime.split(" ");
-			// var todaysDate = todaysDateTimeSplit[0];
-			// var todaysTime = todaysDateTimeSplit[1];
-
-			log.debug({
-				title: "phoneCallRecord",
-				details: phoneCallRecord,
-			});
-
-			var now = new Date();
-			// now.setHours(now.getHours() + 19);
-			log.debug({
-				title: "now",
-				details: now,
-			});
-
-			log.debug({
-				title: "now.toString()",
-				details: now.toString(),
-			});
-
-			// now = now.toString();
-
-			// Calculate the Sydney timezone offset (UTC+11 during daylight saving time, UTC+10 otherwise)
-			// var sydneyOffset = 11 * 60; // Sydney is UTC+11 during daylight saving time
-			// var localOffset = now.getTimezoneOffset(); // Local timezone offset in minutes
-
-			// // Calculate the difference in minutes and adjust the date
-			// var offsetDifference = sydneyOffset - localOffset;
-			// now.setMinutes(now.getMinutes() + offsetDifference);
-
-			// log.debug({
-			// 	title: "now.toString()",
-			// 	details: now.toString(),
-			// });
-
-			// Format the date to "YYYY-MM-DDTHH:MM:SS"
-			now.setHours(now.getHours() + 19);
-			var year = now.getFullYear();
-			var month = customPadStart((now.getMonth() + 1).toString(), 2, "0"); // Months are zero-based
-			var day = customPadStart(now.getDate().toString(), 2, "0");
-			var hours = customPadStart(now.getHours().toString(), 2, "0");
-			var minutes = customPadStart(now.getMinutes().toString(), 2, "0");
-			var seconds = customPadStart(now.getSeconds().toString(), 2, "0");
-
-			var formattedDateTime =
-				year +
-				"-" +
-				month +
-				"-" +
-				day +
-				"T" +
-				hours +
-				":" +
-				minutes +
-				":" +
-				seconds;
-
-			log.debug({
-				title: "sydneyTime",
-				details: formattedDateTime,
-			});
-
-			var formattedTime = hours + ":" + minutes;
-			log.debug({
-				title: "formattedTime",
-				details: formattedTime,
-			});
-
-			var callback_date = month + "/" + day + "/" + year;
-			var date = new Date(callback_date);
-			format.format({
-				value: date,
-				type: format.Type.DATE,
-				timezone: format.Timezone.AUSTRALIA_SYDNEY,
-			});
-
-			var start_arr = formattedTime.split(":");
-			var startTimeVar = new Date(callback_date);
-			startTimeVar.setHours(start_arr[0], start_arr[1], 0, 0);
-
-			log.debug({
-				title: "date",
-				details: date,
-			});
-			log.debug({
-				title: "startTimeVar",
-				details: startTimeVar,
-			});
-
-			phoneCallRecord.setValue({
-				fieldId: "startdate",
-				value: date,
-			});
-			phoneCallRecord.setValue({
-				fieldId: "completeddate",
-				value: date,
-			});
-
-			// phoneCallRecord.setValue({
-			// 	fieldId: "starttime",
-			// 	value: startTimeVar,
-			// });
-
-			log.debug({
-				title: "phoneCallRecord",
-				details: phoneCallRecord,
-			});
+					value: endTimeVar,
+				});
+			}
 		}
 	}
 
@@ -177,66 +109,6 @@ define([
 		var hours = customPadStart((date.getUTCHours() + 11).toString(), 2, "0");
 		var minutes = customPadStart(date.getUTCMinutes().toString(), 2, "0"); // Create a Date object with the given time
 		return hours + ":" + minutes;
-	}
-
-	/**
-	 * @description
-	 * @author Ankith Ravindran (AR)
-	 * @date 10/09/2024
-	 * @param {*} time24
-	 * @returns {*}
-	 */
-	function convertTo12HourFormat(time24) {
-		// Split the time string into hours and minutes
-		var [hours, minutes] = time24.split(":").map(Number);
-
-		// Determine AM or PM suffix
-		var suffix = hours >= 12 ? "pm" : "am";
-
-		// Convert hours to 12-hour format
-		var hours12 = hours % 12 || 12;
-
-		var newMinutes = minutes.toString();
-		newMinutes = padStart(newMinutes, 2, "0");
-
-		// Return the formatted 12-hour time string
-		return hours12 + ":" + newMinutes + " " + suffix;
-	}
-
-	function getDateStoreNS() {
-		var date = new Date();
-		// if (date.getHours() > 6) {
-		//     date.setDate(date.getDate() + 1);
-		// }
-
-		format.format({
-			value: date,
-			type: format.Type.DATETIME,
-			timezone: format.Timezone.AUSTRALIA_SYDNEY,
-		});
-
-		log.debug({
-			title: "date",
-			details: date,
-		});
-
-		return date;
-	}
-
-	// Function to get current date and time in "dd/mm/yyyy HH:MM" format
-	function getCurrentDateTime() {
-		var now = new Date();
-		log.debug({
-			title: "now",
-			details: now,
-		});
-		now.setHours(now.getHours() + 11);
-		var day = customPadStart(now.getDate().toString(), 1, "0");
-		var month = customPadStart((now.getMonth() + 1).toString(), 1, "0"); // Months are zero-based
-		var year = now.getFullYear();
-		var hours = customPadStart(now.getUTCHours().toString(), 2, "0");
-		var minutes = customPadStart(now.getUTCMinutes().toString(), 2, "0");
-		return day + "/" + month + "/" + year + " " + hours + ":" + minutes;
 	}
 
 	/* @description Pads the current string with another string (multiple times, if needed) until the resulting string reaches the given length. The padding is applied from the start (left) of the current string.
